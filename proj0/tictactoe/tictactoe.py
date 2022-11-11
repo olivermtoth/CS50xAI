@@ -37,11 +37,11 @@ def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
-    actions = []
+    actions = set()
     for i in range(3):
       for j in range(3):
-        if board[i][j] == EMPTY:
-          actions.append((i, j))
+        if board[i][j] == None:
+          actions.add((i, j))
     return actions
 
 
@@ -49,10 +49,12 @@ def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
-    if board[action[0]][action[1]] != EMPTY:
-      raise Exception("ILLEGEAL MOVE")
+    i = action[0]
+    j = action[1]
+    if board[i][j] != EMPTY:
+      raise Exception("ILLEGAL MOVE")
     playboard = deepcopy(board)
-    playboard[action[0]][action[1]] = player(board)
+    playboard[i][j] = player(board)
     return playboard
     
 
@@ -61,17 +63,20 @@ def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
+    for player in [X,O]:
+
+      for row in board:
+        if row == [player]*3:
+          return player
+      
+      for i in range(3):
+        column = [board[x][i] for x in range(3)]
+        if column == [player]*3:
+          return player
+    
     if board[0][0] == board[1][1] == board[2][2] or board[0][2] == board[1][1] == board[2][0] :
-        return board[1][1]
-    
-    for row in board:
-      if row[0] == row[1] == row[3]:
-        return row[0]
-    
-    for x in range(3):
-      if board[0][x] == board[1][x] == board[2][x]:
-        return board[0][x]
-    
+      return board[1][1]
+
     return None
 
 
@@ -79,33 +84,54 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    if winner(board) != None and EMPTY not in board:
+    if winner(board) != None:
       return True
+    
+    for row in board:
+      for cell in row:
+        if EMPTY in row:
+          return False
 
-    return False
+    return True
 
 
 def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
     """
-    return 1 if winner(board) == X else -1 if winner(board) == O else 0
+    w = winner(board)
+    if w == X:
+      return 1
+    elif w == O:
+      return -1
+    else:
+      return 0
 
 def max_value(board):
+  optimal_action = ()
   if terminal(board):
-    return utility(board)
+    return utility(board), optimal_action
   value = -1*math.inf
   for action in actions(board):
-    value = max(value, min_value(result(board, action)))
-  return value
+    # value = max(value, min_value(result(board, action)))
+    current_value = min_value(result(board, action))[0]
+    if current_value > value:
+      value = current_value
+      optimal_action = action
+  return value, optimal_action
 
 def min_value(board):
+  optimal_action = ()
   if terminal(board):
-    return utility(board)
+    return utility(board), optimal_action
   value = math.inf
   for action in actions(board):
-    value = min(value, max_value(result(board, action)))
-  return value
+    # value = min(value, max_value(result(board, action)))
+    current_value = max_value(result(board, action))[0]
+    if current_value < value:
+      value = current_value
+      optimal_action = action
+  return value, optimal_action
 
 def minimax(board):
     """
@@ -113,12 +139,10 @@ def minimax(board):
     """
     if terminal(board):
       return None
-    optimal_action = None
-    value = -1*math.inf
-    for action in action(board):
-      current_value = max_value(result(board, action))
-      if current_value > value:
-        optimal_action = action
-        value = current_value
-    return optimal_action
+
+    current_player = player(board)
+    if current_player == X:
+      return max_value(board)[1]
+    else:
+      return min_value(board)[1] 
     
