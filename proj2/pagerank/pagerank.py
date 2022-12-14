@@ -136,9 +136,11 @@ def iterate_pagerank(corpus, damping_factor):
             for key2 in corpus:
                 if key in corpus[key2]:
                     s += count[key2]/len(corpus[key2])
-            R = (1 - damping_factor)/N + damping_factor * s
+            R = (1 - damping_factor)/ N + damping_factor * s
             delta = abs(R- count[key])
             count[key] = R
+
+    return count
 
 
 
